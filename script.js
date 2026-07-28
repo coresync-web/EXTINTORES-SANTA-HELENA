@@ -53,5 +53,69 @@ Mensagem: ${mensagem}`);
   window.open(`https://wa.me/5564974003594?text=${texto}`, "_blank", "noopener");
 });
 
+const flipbook = document.querySelector("[data-flipbook]");
+
+if (flipbook) {
+  const totalPages = Number(flipbook.dataset.totalPages || 0);
+  const currentImage = flipbook.querySelector("[data-book-current]");
+  const nextImage = flipbook.querySelector("[data-book-next]");
+  const turnImage = flipbook.querySelector("[data-book-turn]");
+  const currentNumber = flipbook.querySelector("[data-book-current-number]");
+  const progress = flipbook.querySelector("[data-book-progress]");
+  const prevButton = flipbook.querySelector("[data-book-prev]");
+  const nextButton = flipbook.querySelector("[data-book-next-button]");
+  let currentPage = 1;
+  let isTurning = false;
+
+  const pageSource = (page) => `assets/images/portfolio/portfolio-page-${String(page).padStart(2, "0")}.png`;
+  const turnDuration = 640;
+
+  const preloadPage = (page) => {
+    if (page < 1 || page > totalPages) {
+      return;
+    }
+
+    const image = new Image();
+    image.src = pageSource(page);
+  };
+
+  const paintBook = () => {
+    const followingPage = currentPage === totalPages ? currentPage : currentPage + 1;
+    currentImage.src = pageSource(currentPage);
+    currentImage.alt = `Página ${currentPage} do portfólio Extintores Santa Helena`;
+    nextImage.src = pageSource(followingPage);
+    currentNumber.textContent = String(currentPage).padStart(2, "0");
+    progress.style.width = `${(currentPage / totalPages) * 100}%`;
+    prevButton.disabled = currentPage === 1 || isTurning;
+    nextButton.disabled = currentPage === totalPages || isTurning;
+    preloadPage(currentPage - 1);
+    preloadPage(currentPage + 1);
+  };
+
+  const turnPage = (direction) => {
+    const targetPage = currentPage + direction;
+
+    if (isTurning || targetPage < 1 || targetPage > totalPages) {
+      return;
+    }
+
+    isTurning = true;
+    turnImage.src = pageSource(currentPage);
+    currentPage = targetPage;
+    paintBook();
+    flipbook.classList.add(direction > 0 ? "is-forward" : "is-backward");
+
+    window.setTimeout(() => {
+      flipbook.classList.remove("is-forward", "is-backward");
+      isTurning = false;
+      paintBook();
+    }, turnDuration);
+  };
+
+  prevButton.addEventListener("click", () => turnPage(-1));
+  nextButton.addEventListener("click", () => turnPage(1));
+  paintBook();
+}
+
 updateHeader();
 window.addEventListener("scroll", updateHeader, { passive: true });
